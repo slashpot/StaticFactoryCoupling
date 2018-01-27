@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NSubstitute;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Formatting;
@@ -21,8 +22,16 @@ namespace StaticFactoryCoupling
                 new Order{ StoreType= StoreType.Family, Id=3},
             };
 
+            var seven = Substitute.For<IStoreService>();
+            var family = Substitute.For<IStoreService>();
+
+            SimpleFactory.SetStoreService(seven, family);
+
             //act
             target.ShippingByStore(orders);
+
+            seven.Received().Ship(Arg.Any<Order>());
+            family.Received(2).Ship(Arg.Any<Order>());
 
             //todo, assert
             //ShipService should invoke SevenService once and FamilyService twice
@@ -59,6 +68,12 @@ namespace StaticFactoryCoupling
     {
         private static IStoreService sevenService = new SevenService();
         private static IStoreService familyService = new FamilyService();
+
+        internal static void SetStoreService(IStoreService seven, IStoreService family)
+        {
+            sevenService = seven;
+            familyService = family;
+        }
 
         internal static IStoreService GetStoreService(Order order)
         {
